@@ -63,6 +63,7 @@ def compact(db_name, poll_interval=0, server=None):
             if completed and db_info.get('disk_size', None):
                 logging.info('Post-compact size of %r: %s' % (db_name,
                     repr_bytes(db_info['disk_size'])))
+            return completed
         return check_completed
     # Synchronous compaction
     elif poll_interval > 0:
