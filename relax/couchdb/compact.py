@@ -39,6 +39,8 @@ def compact(db_name, poll_interval=0, server=None):
     
     server = shortcuts.get_server() if (not server) else server
     db = server[db_name]
+    logging.info('Pre-compact size of %r: %s' % (db_name,
+        repr_bytes(db.info()['disk_size']),))
     logging.debug('POST ' + db.resource.uri + '/_compact')
     # Start compaction process by issuing a POST to '/<db_name>/_compact'.
     resp_headers, resp_body = db.resource.post('/_compact')
@@ -56,7 +58,11 @@ def compact(db_name, poll_interval=0, server=None):
             logging.debug(
                 'Polling database to check if compaction has completed')
             logging.debug('GET ' + db.resource.uri + '/')
-            return not db.info().get('compact_running', False)
+            db_info = db.info()
+            completed = not db_info.get('compact_running', False)
+            if completed and db_info.get('disk_size', None):
+                logging.info('Post-compact size of %r: %s' % (db_name,
+                    repr_bytes(db_info['disk_size'])))
         return check_completed
     # Synchronous compaction
     elif poll_interval > 0:
@@ -72,6 +78,18 @@ def compact(db_name, poll_interval=0, server=None):
                 'Polling database to check if compaction has completed')
             logging.debug('GET ' + db.resource.uri + '/')
             running = db.info().get('compact_running', False)
+        size_after = db.info().get('disk_size', None)
+        if size_after:
+            logging.info('Post-compact size of %r: %s' % (db_name,
+                repr_bytes(size_after)))
         return True
     else:
         raise ValueError('Poll interval must be greater than zero.')
+
+def repr_bytes(bytes):
+    sizes = 'B KB MB GB TB PB'.split()
+    size_index = 0
+    while bytes > 1024:
+        bytes /= 1024.0
+        size_index += 1
+    return '%.2f %s' % (bytes, sizes[size_index])

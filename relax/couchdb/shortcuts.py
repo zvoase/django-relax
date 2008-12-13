@@ -1,3 +1,5 @@
+import couchdb
+
 try:
     from django.conf import settings
 except ImportError:

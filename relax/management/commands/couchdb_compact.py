@@ -61,3 +61,7 @@ class Command(BaseCommand):
                 else:
                     logging.debug('Successfully began compaction of %r' % 
                         (db_name,))
+        
+        # Reset root logger
+        logging.root.name = root_logger_name
+        logging.root.setLevel(root_logger_level)
