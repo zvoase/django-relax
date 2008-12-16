@@ -10,15 +10,11 @@ class NonExistentSetting(Exception):
         Exception.__init__(self, 'Setting %r does not exist.' % (attr,))
 
 
-COUCHDB_SERVER = 'http://localhost:5984/'
-VIEW_SERVER_HOST = 'localhost:5936'
-
-
 def _(attr, *args):
     if hasattr(djangosettings, attr):
         return getattr(djangosettings, attr)
     elif attr in globals():
-        return globals().get(attr)
+        return globals.get(*((attr,) + args))
     elif args:
         return args[0]
     else:

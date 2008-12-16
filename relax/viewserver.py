@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from os import linesep as NEWLINE
 import SocketServer
 import sys
 try:
@@ -65,7 +66,7 @@ class ViewServerRequestHandler(SocketServer.StreamRequestHandler):
         try:
             function = get_function(function_name)
         except Exception, exc:
-            self.wfile.write(js_error(exc))
+            self.wfile.write(js_error(exc) + NEWLINE)
             return
         # This tests to see if the function has been decorated with the view
         # server synchronisation decorator (``decorate_view``).
@@ -167,7 +168,7 @@ class ViewServerRequestHandler(SocketServer.StreamRequestHandler):
                 except Exception, exc:
                     # Sometimes errors come up. Once again, I can't predict
                     # anything, but can at least tell CouchDB about the error.
-                    self.wfile.write(repr(exc))
+                    self.wfile.write(repr(exc) + NEWLINE)
                     continue
                 else:
                     # Automagically get the command handler.
@@ -175,20 +176,22 @@ class ViewServerRequestHandler(SocketServer.StreamRequestHandler):
                     if not handler:
                         # We are ready to not find commands. It probably won't
                         # happen, but fortune favours the prepared.
-                        self.wfile.write(repr(CommandNotFound(cmd[0])))
+                        self.wfile.write(
+                            repr(CommandNotFound(cmd[0])) + NEWLINE)
                         continue
                     return_value = handler(*cmd[1:])
                     if not return_value:
                         continue
                     # We write the output back to CouchDB.
-                    self.wfile.write(one_lineify(json.dumps(return_value)))
+                    self.wfile.write(
+                        one_lineify(json.dumps(return_value)) + NEWLINE)
             except Exception, exc:
-                self.wfile.write(repr(exc))
+                self.wfile.write(repr(exc) + NEWLINE)
                 continue
     
     def log(self, string):
         """Log an event on the CouchDB server."""
-        self.wfile.write(json.dumps({'log': string}))
+        self.wfile.write(json.dumps({'log': string}) + NEWLINE)
 
 
 class ViewServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
