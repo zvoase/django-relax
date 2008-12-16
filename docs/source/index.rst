@@ -1,14 +1,19 @@
-.. django-relax documentation master file, created by sphinx-quickstart on Sat Dec 13 16:06:58 2008.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+==============================
+Documentation for django-relax
+==============================
 
-Welcome to django-relax's documentation!
-========================================
+.. rubric:: All the django-relax docs fit to print.
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
+
+Related Links
+=============
+
+* Github project page: `<http://github.com/zvoase/django-relax/tree/master>`_
+* Ohloh project page: `<http://ohloh.net/projects/django-relax/>`_
 
 Indices and tables
 ==================
@@ -16,4 +21,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
