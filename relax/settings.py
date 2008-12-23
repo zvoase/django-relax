@@ -1,3 +1,7 @@
+"""
+Utility module for getting hold of Django setting in a quick 'n' easy way.
+"""
+
 try:
     from django.conf import settings as djangosettings
 except ImportError:

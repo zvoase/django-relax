@@ -17,7 +17,7 @@ Current status
 `django-relax`_ is in a planning/alpha stage and is not considered stable or
 suitable for deployment on production systems. However, if you are interested
 in contributing, you can try it out on development systems to help contribute
-feedback. Feedback at the moment can only be done via the `django-relax wiki`,
+feedback. Feedback at the moment can only be done via the `django-relax wiki`_,
 but I'm looking to find some issue-tracker hosting, etc.
 
 

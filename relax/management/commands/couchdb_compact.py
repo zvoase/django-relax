@@ -3,65 +3,56 @@
 import logging
 import time
 
-from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, make_option
 
-from relax.couchdb import compact, shortcuts
+from relax import DEFAULT_FORMATTER, settings
+from relax.couchdb import db_to_specifier, specifier_to_db, compact, shortcuts
 
 
 class Command(BaseCommand):
     
     option_list = BaseCommand.option_list + (
-        make_option('-d', '--debug',
-            dest='debug', action='store_true', default=False,
-            help="Don't exit until compaction has completed."),
         make_option('-a', '--compact-all',
             dest='compact_all', action='store_true', default=False,
-            help='Compact all CouchDB databases.'),
+            help='Compact all CouchDB databases in the configured server.'),
         make_option('-s', '--sync',
             dest='sync', action='store_true', default=False,
             help='Run compactions synchronously.'))
     
     help = 'Compact CouchDB databases.'
-    args = '[-s] [-d] [--compact-all | db_name1[, db_name2, ...]]'
+    args = '[-s] [--compact-all | db_spec1[, db_spec2, ...]]'
     
-    def handle(self, *db_names, **options):
+    def handle(self, *db_specs, **options):
         # Process options and arguments
-        debug = options.get('debug', False)
         compact_all = options.get('compact_all', False)
         sync = options.get('sync', False)
-        server = shortcuts.get_server()
-        if (not db_names) and compact_all:
-            db_names = list(server)
-        
+        if (not db_specs) and compact_all:
+            local_server = shortcuts.get_server()
+            db_specs = map(db_to_specifier, list(local_server))
         # Set up logger
-        root_logger_name = logging.root.name
-        logging.root.name = 'couchdb_compact'
-        root_logger_level = logging.root.getEffectiveLevel()
-        if debug:
-            logging.root.setLevel(logging.DEBUG)
-        
+        logger = logging.getLogger('relax.couchdb.compact')
+        handler = logging.StreamHandler()
+        handler.setFormatter(DEFAULT_FORMATTER)
+        logger.handlers = [handler]
+        if settings._('DEBUG', True):
+            logger.setLevel(logging.DEBUG)
+        logger.propagate = False
         # Begin compaction
-        for db_name in db_names:
-            logging.debug('Compacting %r' % (db_name,))
-            if debug or sync:
+        for db_spec in db_specs:
+            logger.debug('Compacting %r' % (db_spec,))
+            if sync:
                 try:
-                    result = compact(db_name, poll_interval=0.4)
-                except CompactionError:
+                    result = compact.compact(db_spec, poll_interval=0.4)
+                except compact.CompactionError:
                     result = False
                 if not result:
-                    logging.error('Error compacting %r' % (db_name,))
+                    logger.error('Error compacting %r' % (db_spec,))
                 else:
-                    logging.debug('Successfully compacted %r' % (db_name,))
+                    logger.info('Successfully compacted %r' % (db_spec,))
             else:
                 try:
-                    check_completed = compact(db_name)
-                except CompactionError:
-                    logging.error('Error compacting %r' % (db_name,))
+                    check_completed = compact.compact(db_spec)
+                except compact.CompactionError:
+                    logger.error('Error compacting %r' % (db_spec,))
                 else:
-                    logging.debug('Successfully began compaction of %r' % 
-                        (db_name,))
-        
-        # Reset root logger
-        logging.root.name = root_logger_name
-        logging.root.setLevel(root_logger_level)
+                    logger.info('Successfully began compaction of %r', db_spec)
